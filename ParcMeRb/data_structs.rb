@@ -3,7 +3,7 @@ module ParcMe
 
   DirectionalStreetSegment = Struct.new(:street_segment, :side_code)
 
-  ParkingBay = Struct.new(:bay_id, :sign, :directional_street_segment)
+  ParkingBay = Struct.new(:bay_id, :directional_street_segment)
 
   ParkingEvent = Struct.new(:parking_bay, :start_time, :end_time, :duration)
 
@@ -27,13 +27,13 @@ module ParcMe
     end
 
     def create_parking_event(street_name, between_street_1, between_street_2, side_code, bay_id, sign, start_time, end_time, duration)
-      parking_bay = parking_bay(bay_id, street_name, between_street_1, between_street_2, side_code, sign)
+      parking_bay = parking_bay(bay_id, street_name, between_street_1, between_street_2, side_code)
       ParkingEvent.new(parking_bay, start_time, end_time, duration)
     end
 
     # is bay_id unique?
-    def parking_bay(bay_id, street_name, between_street_1, between_street_2, side_code, sign)
-      bay_data = [bay_id, sign, directional_street_segment(street_name, between_street_1, between_street_2, side_code)]
+    def parking_bay(bay_id, street_name, between_street_1, between_street_2, side_code)
+      bay_data = [bay_id, directional_street_segment(street_name, between_street_1, between_street_2, side_code)]
       @parking_bays[bay_id] = ParkingBay.new(*bay_data) unless @parking_bays.has_key?(bay_id)
       @parking_bays.fetch(bay_id)
     end
