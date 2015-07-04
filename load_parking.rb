@@ -57,10 +57,12 @@ SQL
 end
 
 def self.permitted_duration(sign)
+  return 0 unless sign
+
   if m = sign.match(/^P[\/ ]{0,2}(\d+)/)
-    m[1] * SECONDS_IN_MINUTE
+    m[1].to_i * SECONDS_IN_MINUTE
   elsif m = sign.match(/^(\d)\s?P/)
-    m[1] * SECONDS_IN_HOUR
+    m[1].to_i * SECONDS_IN_HOUR
   elsif sign[0..3] == '1/2P'
     SECONDS_IN_HOUR / 2
   elsif sign[0..3] == '1/4P'
