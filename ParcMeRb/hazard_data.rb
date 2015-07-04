@@ -1,5 +1,5 @@
 def get_cdf_hash(events,max_mins, bin_size)
-  total_events = events.select{|event| event.duration <= max_mins*bin_size*60}.size
+  total_events = events.select{|event| event.duration < max_mins*bin_size*60}.size
   still_going = events.dup
 
   density = {}
@@ -76,7 +76,6 @@ def calc_nearest_hash_value_for_duration(hash, duration)
   previous_key = 0
   hash.fetch(duration) {|t|
     hash.keys.sort.each_with_index {|key, index|
-      puts index
       if index == 0
         previous_key = key
       else
