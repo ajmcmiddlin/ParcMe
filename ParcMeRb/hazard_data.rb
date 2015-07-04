@@ -1,3 +1,36 @@
+def get_cdf_hash(events,max_mins, bin_size)
+  total_events = events.select{|event| event.duration <= max_mins*bin_size*60}.size
+  still_going = events.dup
+
+  density = {}
+  bin_lower_bound = 0
+  (1..max_mins/bin_size).each { |mins|
+    bin_upper_bound = mins * 60*bin_size
+    density[bin_upper_bound] = still_going.select { |event|
+      event.duration < bin_upper_bound
+    }.size / total_events.to_f
+  }
+
+  density
+end
+
+def calc_probability_for_duration_change(cdf_hash, initial_duration, duration_change)
+  initial_prob = calc_nearest_hash_value_for_duration(cdf_hash, initial_duration*60).to_f
+  end_prob = calc_nearest_hash_value_for_duration(cdf_hash, initial_duration*60+duration_change*60).to_f
+  puts initial_prob
+  puts end_prob
+  (end_prob - initial_prob) / (1.0 - initial_prob)
+end
+
+def write_density_data(density_hash, dir)
+  File.open(File.join(dir,'density_data.csv'),'w') { |file|
+    file.puts 'time, density'
+    density_hash.each { |time, density|
+      file.puts [time, density].join(',')
+    }
+  }
+end
+
 def hazard_data(events,max_mins, bin_size)
   total_events = events.size
   still_going = events.dup
@@ -39,19 +72,19 @@ def get_hazard_hash(events, max_mins, bin_size)
   hazard
 end
 
-def calc_hazard_for_duration(hazard_hash, duration)
+def calc_nearest_hash_value_for_duration(hash, duration)
   previous_key = 0
-  hazard_hash.fetch(duration) {|t|
-    hazard_hash.keys.sort.each_with_index {|key, index|
+  hash.fetch(duration) {|t|
+    hash.keys.sort.each_with_index {|key, index|
       puts index
       if index == 0
         previous_key = key
       else
         if key >= t
           if key - t > t - previous_key
-            return hazard_hash[key]
+            return hash[key]
           else
-            return hazard_hash[previous_key]
+            return hash[previous_key]
           end
         end
 
@@ -74,7 +107,7 @@ end
 def write_hazard_function_output(directory, hazard_hash)
   File.open(File.join(directory, 'hazard_function_output.csv'), 'w') { |file|
     hazard_hash.keys.each { |key|
-      file.puts [key, calc_hazard_for_duration(hazard_hash, key)].join(',')
+      file.puts [key, calc_nearest_hash_value_for_duration(hazard_hash, key)].join(',')
     }
   }
 end
