@@ -73,4 +73,69 @@ SQL
     }
     consumption_data
   end
+
+  def create_between_streets(events)
+    path_builder = create_path_builder()
+    records = events.map { |event|
+      event.parking_bay.directional_street_segment.street_segment
+    }.uniq.flat_map { |street_segment|
+      street_links = $Ot.network.links_with_name(street_segment.street_name)
+      street_nodes = get_node_set(street_links)
+      crossing_links_1 = $Ot.network.links_with_name(street_segment.between_street_1)
+      crossing_links_2 = $Ot.network.links_with_name(street_segment.between_street_2)
+
+      crossing_nodes_1 = get_node_set(crossing_links_1)
+      crossing_nodes_2 = get_node_set(crossing_links_2)
+
+      anode = find_matching_node(street_nodes, crossing_nodes_1)
+      bnode = find_matching_node(street_nodes, crossing_nodes_2)
+
+      path = build_path(path_builder,anode,bnode)
+      path_links = path.map(&:first)
+
+      ordered_between = [street_segment.between_street_1,street_segment.between_street_2].sort
+      path_links.map { |linknr|
+        # TODO - check the fields
+        [linknr,0,0,ordered_between.first,ordered_between.last]
+      }
+    }
+
+    OtTable.insert($Ot.mainVariantDirectory / 'link1data1.db', records)
+  end
+
+  def create_path_builder
+    # TODO: check this...
+    traffic = ZenithHighway.new
+    traffic.routeFactors = [1,0,0,0]
+
+    user_class = User.new
+    user_class.network = [M_Car,T_AM]
+
+    traffic.addUserClass(M_Car,user_class)
+    traffic.freeze_properties = true
+    traffic
+  end
+
+  def build_path(path_builder,anode,bnode)
+    links = path_builder.get_path(anode,bnode)
+    if links.empty?
+      links = path_builder.get_path(bnode,anode)
+    end
+
+    raise "No path found" if links.empty?
+    links
+  end
+
+  def get_node_set(link_set)
+    link_set.map { |linknr|
+      $Ot.network.get_link_nodes(linknr)
+    }.uniq
+  end
+
+  def find_matching_node(nodes1,nodes2)
+    matches = nodes1 & nodes2
+    raise "No match!" if matches.empty?
+    raise "Too many matches!" if matches.size > 1
+    matches.first
+  end
 end

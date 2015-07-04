@@ -18,13 +18,9 @@ module ParcMe
           pe_data = ['StreetName','BetweenStreet1Description','BetweenStreet2Description','SideCode','BayID','Sign'].map { |field|
             h.fetch(field)
           }
-          #arrival_time = h.fetch('ArrivalTime')
-          #departure_time = h.fetch('DepartureTime')
-          p h.fetch('ArrivalTime')
-          time_str = '%d/%m/%Y %H:%M:%S %p +0000'
-          arrival_time = DateTime.strptime("13/03/2014 12:01:16 AM +0000",'%d/%m/%Y %H:%M:%S %p +0000')
-          # arrival_time = DateTime.strptime(h.fetch('ArrivalTime'),time_str)
-          departure_time = DateTime.strptime(h.fetch('DepartureTime'),time_str)
+
+          arrival_time = DateTime.parse(h.fetch('ArrivalTime'))
+          departure_time = DateTime.parse(h.fetch('DepartureTime'))
 
           pe_data += [arrival_time, departure_time, (departure_time - arrival_time) * 24.0 * 3600]
 
