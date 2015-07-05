@@ -9,17 +9,16 @@ module ParcMe
       File.open(csv_file,'r') { |file_h|
         header = file_h.readline.strip.split(',')
         parking_events = (1..num_records).map { |line|
-          row = file_h.readline.strip.split(',')
+          row = file_h.readline.strip.gsub(/\"/,'').split(',')
           h = Hash[*(header.zip(row).flatten)]
 
           next unless !block_given? || yield(h)
 
           # street_name, between_street_1, between_street_2, side_code, bay_id, sign, start_time, end_time
-          pe_data = ['StreetName','BetweenStreet1 Description','BetweenStreet2 Description','SideCode','BayID','Sign'].map { |field|
+          pe_data = ['StreetName','BetweenStreet1Description','BetweenStreet2Description','SideCode','BayID','Sign'].map { |field|
             h.fetch(field)
           }
-          #arrival_time = h.fetch('ArrivalTime')
-          #departure_time = h.fetch('DepartureTime')
+
           arrival_time = DateTime.parse(h.fetch('ArrivalTime'))
           departure_time = DateTime.parse(h.fetch('DepartureTime'))
 
