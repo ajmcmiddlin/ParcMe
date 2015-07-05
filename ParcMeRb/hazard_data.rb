@@ -1,7 +1,6 @@
 def get_cdf_hash(events,max_secs, bin_size)
   total_events = events.select{|event| event.duration < max_secs }.size
   still_going = events.dup
-
   density = {}
   bin_lower_bound = 0
   (0..(max_secs/bin_size)).each { |bin_nr|
