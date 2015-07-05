@@ -18,44 +18,6 @@ def self.seconds_since_midnight(dt)
   (dt - dt.to_date) * SECONDS_IN_DAY
 end
 
-def self.insert_stmt(db)
-  db.prepare <<SQL
-INSERT INTO Parking2014
-VALUES (:ParkingEventId,
-        :DeviceId,
-        :ArrivalTime,
-        :ArrivalTimeSeconds,
-        :ArrivalDayOfWeek,
-        :ArrivalDayOfMonth,
-        :ArrivalMonth,
-        :ArrivalYear,
-        :DepartureTime,
-        :DepartureTimeSeconds,
-        :DepartureDayOfWeek,
-        :DepartureDayOfMonth,
-        :DepartureMonth,
-        :DepartureYear,
-        :Duration,
-        :PermittedDuration,
-        :StreetMarker,
-        :SignPlateId,
-        :Sign,
-        :Area,
-        :AreaName,
-        :StreetId,
-        :StreetName,
-        :BetweenStreet1Id,
-        :BetweenStreet1Description,
-        :BetweenStreet2Id,
-        :BetweenStreet2Description,
-        :SideOfStreet,
-        :SideCode,
-        :SideName,
-        :BayID,
-        :InViolation);
-SQL
-end
-
 def self.permitted_duration(sign)
   return 0 unless sign
 
@@ -72,68 +34,83 @@ def self.permitted_duration(sign)
   end
 end
 
-def self.insert_row(stmt, row)
+def self.headers
+  %w{ParkingEventId DeviceId ArrivalTime ArrivalTimeSeconds ArrivalDayOfWeek ArrivalDayOfMonth
+     ArrivalMonth ArrivalYear DepartureTime DepartureTimeSeconds DepartureDayOfWeek DepartureDayOfMonth
+     DepartureMonth DepartureYear Duration PermittedDuration StreetMarker SignPlateId Sign Area AreaName
+     StreetId StreetName BetweenStreet1Id BetweenStreet1Description BetweenStreet2Id BetweenStreet2Description
+     SideOfStreet SideCode SideName BayID InViolation} 
+end
+
+def self.make_out_row(row)
   arrival_dt = DateTime.parse(row.fetch('ArrivalTime'))
   departure_dt = DateTime.parse(row.fetch('DepartureTime'))
   duration = (departure_dt - arrival_dt) * SECONDS_IN_DAY
 
-  stmt.bind_param(:ParkingEventId, row.fetch('ParkingEventId'))
-  stmt.bind_param(:DeviceId, row.fetch('DeviceId'))
-  stmt.bind_param(:ArrivalTime, row.fetch('ArrivalTime'))
-  stmt.bind_param(:ArrivalTimeSeconds, seconds_since_midnight(arrival_dt).to_i)
-  stmt.bind_param(:ArrivalDayOfWeek, arrival_dt.wday)
-  stmt.bind_param(:ArrivalDayOfMonth, arrival_dt.day)
-  stmt.bind_param(:ArrivalMonth, arrival_dt.month)
-  stmt.bind_param(:ArrivalYear, arrival_dt.year)
-  stmt.bind_param(:DepartureTime, row.fetch('DepartureTime'))
-  stmt.bind_param(:DepartureTimeSeconds, seconds_since_midnight(departure_dt).to_i)
-  stmt.bind_param(:DepartureDayOfWeek, departure_dt.wday)
-  stmt.bind_param(:DepartureDayOfMonth, departure_dt.day)
-  stmt.bind_param(:DepartureMonth, departure_dt.month)
-  stmt.bind_param(:DepartureYear, departure_dt.year)
-  stmt.bind_param(:Duration, duration.to_i)
-  stmt.bind_param(:PermittedDuration, permitted_duration(row.fetch('Sign')))
-  stmt.bind_param(:StreetMarker, row.fetch('StreetMarker'))
-  stmt.bind_param(:SignPlateId, row.fetch('SignPlateId'))
-  stmt.bind_param(:Sign, row.fetch('Sign'))
-  stmt.bind_param(:Area, row.fetch('Area'))
-  stmt.bind_param(:AreaName, row.fetch('AreaName'))
-  stmt.bind_param(:StreetId, row.fetch('StreetId'))
-  stmt.bind_param(:StreetName, row.fetch('StreetName'))
-  stmt.bind_param(:BetweenStreet1Id, row.fetch('BetweenStreet1 Id'))
-  stmt.bind_param(:BetweenStreet1Description, row.fetch('BetweenStreet1 Description'))
-  stmt.bind_param(:BetweenStreet2Id, row.fetch('BetweenStreet2 Id'))
-  stmt.bind_param(:BetweenStreet2Description, row.fetch('BetweenStreet2 Description'))
-  stmt.bind_param(:SideOfStreet, row.fetch('SideOfStreet'))
-  stmt.bind_param(:SideCode, row.fetch('SideCode'))
-  stmt.bind_param(:SideName, row.fetch('SideName'))
-  stmt.bind_param(:BayID, row.fetch('BayID'))
-  stmt.bind_param(:InViolation, row.fetch('InViolation') == 'true' ? 1 : 0)
-
-  stmt.execute
+  [
+    row.fetch('ParkingEventId'),
+    row.fetch('DeviceId'),
+    row.fetch('ArrivalTime'),
+    seconds_since_midnight(arrival_dt).to_i,
+    arrival_dt.wday,
+    arrival_dt.day,
+    arrival_dt.month,
+    arrival_dt.year,
+    row.fetch('DepartureTime'),
+    seconds_since_midnight(departure_dt).to_i,
+    departure_dt.wday,
+    departure_dt.day,
+    departure_dt.month,
+    departure_dt.year,
+    duration.to_i,
+    permitted_duration(row.fetch('Sign')),
+    row.fetch('StreetMarker'),
+    row.fetch('SignPlateId'),
+    row.fetch('Sign'),
+    row.fetch('Area'),
+    row.fetch('AreaName'),
+    row.fetch('StreetId'),
+    row.fetch('StreetName'),
+    row.fetch('BetweenStreet1 Id'),
+    row.fetch('BetweenStreet1 Description'),
+    row.fetch('BetweenStreet2 Id'),
+    row.fetch('BetweenStreet2 Description'),
+    row.fetch('SideOfStreet'),
+    row.fetch('SideCode'),
+    row.fetch('SideName'),
+    row.fetch('BayID'),
+    row.fetch('InViolation') == 'true' ? 1 : 0
+  ]
 end
 
 begin
+  TABLE_NAME = 'Parking2014'
   create_query = IO.read('parking-schema.sql')
   puts 'Opening DB'
   db = SQLite3::Database.open ARGV[0]
+  db.execute("DROP TABLE IF EXISTS #{TABLE_NAME}")
   puts 'Creating table'
-  db.execute('DROP TABLE IF EXISTS Parking2014')
   db.execute(create_query)
+  db.close
 
-  stmt = insert_stmt(db)
-  inserted = 0
   puts "Parsing CSV (#{ARGV[1]})"
-  CSV.foreach(ARGV[1], :headers => true) {|row|
-    stmt.reset!
-    insert_row(stmt, row)
-    inserted += 1
-    puts "#{inserted} rows processed" if (inserted % 10000) == 0
+  inserted = 0
+  OUTPUT_CSV = 'parking-processed.csv'
+  CSV.open(OUTPUT_CSV, 'w') {|csv|
+    csv << headers
+    CSV.foreach(ARGV[1], :headers => true) {|row|
+      row = make_out_row(row)
+      csv << row
+      inserted += 1
+      puts "#{inserted} rows processed" if (inserted % 10000) == 0
+    }
   }
+
+  puts 'Importing CSV to SQLite'
+  `sqlite3 -separator , #{ARGV[0]} ".import #{OUTPUT_CSV} #{TABLE_NAME}"`
 rescue Exception => e
   puts e.display
   puts e.backtrace
 ensure
-  stmt.close if stmt
   db.close if db
 end
