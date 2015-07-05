@@ -25,6 +25,8 @@ Data investigation:
  		- After 1 hour, probability of departure reduces (a long term parking event is likely to continue. This could be an artifact of a residential permit system).
  - CDF plot - we have used the average CDF to predict the probability that a departure will occur in the next 15 minutes (or any time interval)
  		- CDF is probablility that a departure has occured in the time prior.
+
+ 		
 Benefits:
 Reduced trip times, reduced emissions, reduced traffic in CBD.
 More reliabale mode choice selection - people would not drive if probability of getting a park is low.
