@@ -1,0 +1,37 @@
+----------- FIRST MINUTE -------------
+Introduction:
+ - Brief introduction to the problem
+ 	We've all experienced the stress of trying to find a park. Sometimes you wish you could predict where the best place to find a park would be. With ParcMe, you can.
+ - project and team name
+ 	ParcMe, NVM
+ - team members
+ 	Andrew McCluskey, Tim Veitch, Laurence Nicol
+ - brief project description
+ 	We have produced a real-time model of parking demand and supply in the melbourne CBD. Our model predicts the probabiltiy that a space will become available in a certain area, forcast ahead by a given time period. Combined with data from the BCC parking meters, we would be able to predict the probability that a parking space will be available when you arrive at your destination.
+The Data:
+ - Main data set is records of Melbourne parking events for the year of 2014, obtained from the Melbourne CIty COuncil data portal. This is a very comprehensive data set, every parking event, including arrival time, duration, departure time and location data has been recorded for the entire of 2014. In all there are around 13 million records.
+ We have used this data set to estimate parking demand at a given 15 minute interval, and forcast ahead the probability that a parking space will be available at a destination.
+ - Secondary data set is from the BCC, and when combined with our model (based on the melbourne data) will allow prediction of parking demand in the Brisbane CBD.
+Data investigation:
+ - We began by investigating the data avialable, looking for any trends in parking behaviour across an average day. (INSERT DAILY DEMAND GRAPH - TALK TO DEMAND GRAPH).
+ - Next we investigated any systematic behaviour for parking spaces of a certain type (for example, 1P limit parking) (INSERT PDF AND CDF for 1P). Points to note:
+ 		- Large number of parking events in 1P zone have very short duration (dropoffs). This is reflected in a high probability of departure after short durations.
+ 		- After around 30 minutes, parking departures are fairly constant, and the probability that someone will leave remains steady up till around the parking limit (1 hour)
+ 		- At 1 hour, there is a small increase in the number of departures(people leaving at the end of the duration)
+ 		- After 1 hour, probability of departure reduces (a long term parking event is likely to continue. This could be an artifact of a residential permit system).
+ - CDF plot - we have used the average CDF to predict the probability that a departure will occur in the next 15 minutes (or any time interval)
+ 		- CDF is probablility that a departure has occured in the time prior.
+
+
+----------- SECOND MINUTE ------------
+
+
+
+
+Further development:
+
+
+Further data required:
+Our models are currently based on the comprehensive data provided by the Melbourne city council. If other councils, traffic authorities, or organisations such as UQ provided a similar level of live traffic data, our model could be easily customised for their specific parking conditions.
+
+
