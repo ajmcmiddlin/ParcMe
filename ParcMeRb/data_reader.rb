@@ -15,7 +15,7 @@ module ParcMe
           next unless !block_given? || yield(h)
 
           # street_name, between_street_1, between_street_2, side_code, bay_id, sign, start_time, end_time
-          pe_data = ['StreetName','BetweenStreet1 Description','BetweenStreet2 Description','SideCode','BayID','Sign'].map { |field|
+          pe_data = ['StreetName','BetweenStreet1Description','BetweenStreet2Description','SideCode','BayID','Sign'].map { |field|
             h.fetch(field)
           }
 

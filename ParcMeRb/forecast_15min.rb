@@ -9,8 +9,17 @@ csv_file = '/Users/timveitch/Documents/Learning/ParcMe/parking-20140313.csv'
 events = ParcMe::DataReader.read_parking_events_from_csv(csv_file, 38519)
 
 def write_expected_free_spaces(expected_free_spaces,directory)
-  File.open(File.join(directory, 'expected_free_spaces.csv'),'w') {
-    expected_free_spaces
+  header = 'day,street_name,between_street_1,between_street_2,side_code,' + (0..(mins_in_day / 15 - 1)).to_a.join(',')
+  File.open(File.join(directory, 'forecast_free_spaces.csv'),'w') { |file|
+    file.puts header
+    expected_free_spaces.each { |day,seg_h|
+      seg_h.each { |seg,side_h|
+        side_h.each { |side_code,free_spaces_vec|
+          data = [day,seg.street_name,seg.between_street_1,seg.between_street_2,side_code] + free_spaces_vec
+          file.puts data.join(',')
+        }
+      }
+    }
   }
 end
 
@@ -25,6 +34,7 @@ def expected_free_spaces(events,global_demand_rate)
         bay_h.keys.size
       }.inject(0) { |acc,e| acc + e }
     }.inject(0) { |acc,e| acc + e }
+    puts "Total parks #{total_parks}"
 
     segment_h.map_values { |segment,side_code_h|
       side_code_h.map_values { |side_code, bay_h|
@@ -44,7 +54,8 @@ def expected_free_spaces(events,global_demand_rate)
               prob_depart
             end
           }.inject(0.0) { |acc,val| val + acc }
-          [freed_spaces - global_demand_rate.fetch(interval) * bay_h.keys.size / total_parks,0].max
+          
+          [freed_spaces - global_demand_rate.fetch(interval).to_f * bay_h.keys.size / total_parks,0].max
         }
       }
     }
