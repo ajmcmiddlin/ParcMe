@@ -25,6 +25,25 @@
 
 <p>With this real-time data and model, we can tell users the likelihood of finding a park in a particular place at a particular time, and even plot them a route that maximises their chances of finding a park within a particular area. Local governments can also use the data and model to forecast demand and plan infrastructure.</p>
 
+<p>By helping drivers find a park quickly, and by directing them to where they will most likely find a park, we can dramatically reduce congestion, while saving people time and stress. This would also have environmental, safety and social benefits.</p>
+
+<p>Our application could be turned into a website and smartphone app, which could also integrate real time and planned route finding. The suggested route would maximise the drivers chances of finding a park.</p>
+
+<p>The application could also be used to direct park and ride commuters to train stations where there is likely to be parking, or to particular car parks within a university.</p>
+
+<p>Our business model would be to sell custom applications to major organisations such as councils and universities, and to provide a free-mium smartphone application to drivers. Our goal would be to help drivers get to where they need to more quickly and on time, and to improve traffic congestion, safety and the environment.</p>
+
+<p>We believe our tool will be of great interest to any organisation that manages demand for parking, such as councils, State Governments, event management companies and Universities.</p>
+
+<h2>
+<a id="prize-qualification" class="anchor" href="#prize-qualification" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prize Qualification</h2>
+
+<p>We think this idea has great potential as a startup. It's a hard problem, it's useful, and all of the hard stuff can be rolled into a dead simple interface that tells users where to go to get a park, or gives them simple metrics they can use to plan their travel.</p>
+
+<p>Not only can we build a killer app and business, but we can also help relieve congestion and road rage. If people are informed about their chances of parking, many will decide to use alternative transport methods rather than take a high risk car journey. Furthermore, by giving people routing information that optimizes their chances of finding a park, our app can reduce traffic in already congested areas while people drive in circles looking for a park.</p>
+
+<p>Our model is also able to be combined with a secondary data set from the Brisbane City Council (Brisbane City Parking Meters 2011), which could allow prediction of parking availability in the Brisbane CBD. At this stage, we need to transpose Melbourne parking data (such as parking demands over time) into Brisbane in order to apply our model (and real-time prediction is not possible), but in the future, we hope the Brisbane City Council can provide the same level of real-time data as is currently available in Melbourne.</p>
+
 <h2>
 <a id="data" class="anchor" href="#data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Data</h2>
 
@@ -35,20 +54,15 @@
 
 <p>We have used this data set to estimate daily parking demand, in 15-minute periods, and forcast ahead the probability that a parking space will be available at a destination in a particular window of time. The outputs of the model have also been visualised on a directional network of the Melbourne CBD's streets, showing how many parking spaces are likely to be free in 15 minute's time.</p>
 
-<p><img src="https://raw.githubusercontent.com/ajmccluskey/ParcMe/master/cdf_for_duration.png" alt="Cumulative density function for duration of park"></p>
+<p>We also calculated the distribution of parking durations, as shown here. There are many short stays, and then departures remain consistent from 30 minutes to an hour, by which stage most people have left. The ones down here risk being fined! </p>
 
 <p><img src="https://raw.githubusercontent.com/ajmccluskey/ParcMe/master/duration_density_1p.png" alt="Event duration density - 1P parking zones"></p>
 
+<p><img src="https://raw.githubusercontent.com/ajmccluskey/ParcMe/master/cdf_for_duration.png" alt="Cumulative density function for duration of park"></p>
+
+<p>Using this data, we can construct a hazard function, which measures the probability that someone will leave within the next minute, based on how long they’ve parked so far. The spike around 3600 seconds (or an hour) is the rush of people avoiding a fine.</p>
+
 <p><img src="https://raw.githubusercontent.com/ajmccluskey/ParcMe/master/hazard_function.png" alt="Hazard function (probability of leaving given a parking duration)"></p>
-
-<p>Our model is also able to be combined with a secondary data set from the Brisbane City Council (Brisbane City Parking Meters 2011), which could allow prediction of parking availability in the Brisbane CBD. At this stage, we need to transpose Melbourne parking data (such as parking demands over time) into Brisbane in order to apply our model (and real-time prediction is not possible), but in the future, we hope the Brisbane City Council can provide the same level of real-time data as is currently available in Melbourne.</p>
-
-<h2>
-<a id="prizes" class="anchor" href="#prizes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prizes</h2>
-
-<p>We think this idea has great potential as a startup. It's a hard problem, it's useful, and all of the hard stuff can be rolled into a dead simple interface that tells users where to go to get a park, or gives them simple metrics they can use to plan their travel.</p>
-
-<p>Not only can we build a killer app and business, but we can also help relieve congestion and road rage. If people are informed about their chances of parking, many will decide to use alternative transport methods rather than take a high risk car journey. Furthermore, by giving people routing information that optimizes their chances of finding a park, our app can reduce traffic in already congested areas while people drive in circles looking for a park.</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/ajmccluskey/ParcMe">ParcMe</a> is maintained by <a href="https://github.com/ajmccluskey">ajmccluskey</a>.</span>
