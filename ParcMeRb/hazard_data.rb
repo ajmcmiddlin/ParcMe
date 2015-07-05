@@ -1,24 +1,26 @@
-def get_cdf_hash(events,max_mins, bin_size)
-  total_events = events.select{|event| event.duration < max_mins*bin_size*60}.size
+def get_cdf_hash(events,max_secs, bin_size)
+  total_events = events.select{|event| event.duration < max_secs }.size
   still_going = events.dup
 
   density = {}
   bin_lower_bound = 0
-  (1..max_mins/bin_size).each { |mins|
-    bin_upper_bound = mins * 60*bin_size
-    density[bin_upper_bound] = still_going.select { |event|
-      event.duration < bin_upper_bound
+  (0..(max_secs/bin_size)).each { |bin_nr|
+    bin_upper_bound_secs = bin_nr * bin_size
+    density[bin_upper_bound_secs] = still_going.select { |event|
+      event.duration <= bin_upper_bound_secs
     }.size / total_events.to_f
   }
 
   density
 end
 
-def calc_probability_for_duration_change(cdf_hash, initial_duration, duration_change)
-  initial_prob = calc_nearest_hash_value_for_duration(cdf_hash, initial_duration*60).to_f
-  end_prob = calc_nearest_hash_value_for_duration(cdf_hash, initial_duration*60+duration_change*60).to_f
-  puts initial_prob
-  puts end_prob
+def calc_probability_for_duration_change(cdf_hash, initial_duration_secs, duration_change_secs)
+  return 1 if initial_duration_secs > cdf_hash.keys.max
+
+  initial_prob = calc_nearest_hash_value_for_duration(cdf_hash, initial_duration_secs).to_f
+  return 1 if initial_prob == 1.0
+  end_prob = calc_nearest_hash_value_for_duration(cdf_hash, initial_duration_secs+duration_change_secs).to_f
+
   (end_prob - initial_prob) / (1.0 - initial_prob)
 end
 
@@ -90,6 +92,7 @@ def calc_nearest_hash_value_for_duration(hash, duration)
         previous_key = key
       end
     }
+    hash[previous_key]
   }
 end
 

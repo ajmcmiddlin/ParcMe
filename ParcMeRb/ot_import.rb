@@ -33,7 +33,7 @@ SQL
       link_set.flat_map { |(linknr,direction)|
         record.consumption_by_min.map_with_index { |consumption,min|
           scale_factor = record.side_code == 'C' ? 0.5 : 1.0
-          [linknr,1,1,min+1,1,1,1,direction,0,consumption * scale_factor,record.capacity*scale_factor]
+          [linknr,1,1,min+1,1,1,1,direction,0,consumption * scale_factor,record.capacity*scale_factor,(record.capacity-consumption) * scale_factor]
         }
       }
     }

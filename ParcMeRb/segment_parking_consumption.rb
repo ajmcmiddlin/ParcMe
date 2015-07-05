@@ -25,8 +25,8 @@ def directional_segment_consumption(events)
         capacity = side_h.size
         consumption = empty()
 
-        side_h.values.each { |bay_history|
-          bay_consumption = parking_consumed(bay_history)
+        side_h.values.each { |bay_events|
+          bay_consumption = parking_consumed(bay_events)
           consumption = consumption.zip(bay_consumption).map { |total,bay| total + bay }
         }
         DirSegmentConsumption.new(capacity,consumption)
@@ -41,8 +41,10 @@ def parking_consumed(events)
   events.each { |event|
     start_secs = secs_from_midnight(event.start_time.to_time)
     end_secs   = secs_from_midnight(event.end_time.to_time)
-
-    start_secs.step(end_secs,60) { |consumed_secs|
+    #p start_secs
+    #p end_secs
+    #p start_secs.step(end_secs+60,60).to_a.map { |consumed_secs| (consumed_secs / 60).to_i }
+    start_secs.step(end_secs+60,60) { |consumed_secs|
       mins = (consumed_secs / 60).to_i
       consumption[mins] = 1
     }
@@ -59,5 +61,7 @@ def mins_in_day
 end
 
 def secs_from_midnight(time)
-  (time.hour-10) * 3600 + time.min * 60 + time.sec
+  hour = ((time.hour - 10) + 24) % 24
+
+  hour * 3600 + time.min * 60 + time.sec
 end
