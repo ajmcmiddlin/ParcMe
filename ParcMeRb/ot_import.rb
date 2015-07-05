@@ -24,23 +24,37 @@ SQL
     p consumption_data.size
     data = make_link5_data(consumption_data)
     p data.size
+    OtQuery.execute("DELETE FROM 'link5_2data1'")
+
     OtTable.insert(File.join($Ot.variantDirectory,'link5_2data1.db'),data)
   end
 
   def make_link5_data(consumption_data)
     consumption_data.flat_map { |record|
-      link_set = get_link_set(record.street_name, record.boundary_street_1, record.boundary_street_2, record.side_code)
+      link_set = if record.side_code == 'C'
+                   get_center_link_set(record.street_name, record.boundary_street_1, record.boundary_street_2)
+                 else
+                   get_directional_link_set(record.street_name, record.boundary_street_1, record.boundary_street_2, record.side_code)
+                 end
       link_set.flat_map { |(linknr,direction)|
         record.consumption_by_min.map_with_index { |consumption,min|
           scale_factor = record.side_code == 'C' ? 0.5 : 1.0
-          [linknr,1,1,min+1,1,1,1,direction,0,consumption * scale_factor,record.capacity*scale_factor,(record.capacity-consumption) * scale_factor]
+          [linknr,1,1,min+1,1,1,1,direction,0,consumption.to_f * scale_factor,record.capacity.to_f*scale_factor,(record.capacity.to_f-consumption.to_f) * scale_factor]
         }
       }
     }
 
   end
 
-  def get_link_set(street_name, boundary_street_1, boundary_street_2, side_code)
+  def get_center_link_set(street_name, boundary_street_1, boundary_street_2)
+    links_with_name = $Ot.network.links_with_name(street_name).flat_map { |linknr| [[linknr,1],[linknr,2]] }
+    between_links = ['N','S','E','W'].flat_map { |side_code|
+      get_links_for_boundary_and_side(boundary_street_1,boundary_street_2,side_code)
+    }.uniq
+    links_with_name & between_links
+  end
+
+  def get_directional_link_set(street_name, boundary_street_1, boundary_street_2, side_code)
     links_with_name = $Ot.network.links_with_name(street_name).flat_map { |linknr| [[linknr,1],[linknr,2]] }
     p links_with_name if street_name == 'LONSDALE STREET'
     p get_links_for_boundary_and_side(boundary_street_1,boundary_street_2,side_code) if street_name == 'LONSDALE STREET'
@@ -87,20 +101,33 @@ SQL
       crossing_nodes_1 = get_node_set(crossing_links_1)
       crossing_nodes_2 = get_node_set(crossing_links_2)
 
+      #p street_nodes
+      #p crossing_nodes_1
+      #puts "STREET #{street_segment.street_name}"
+      #puts "CROSS #{street_segment.between_street_1}"
       anode = find_matching_node(street_nodes, crossing_nodes_1)
+      #puts "CROSS #{street_segment.between_street_2}"
       bnode = find_matching_node(street_nodes, crossing_nodes_2)
 
+      next unless anode && bnode
       path = build_path(path_builder,anode,bnode)
       path_links = path.map(&:first)
 
       ordered_between = [street_segment.between_street_1,street_segment.between_street_2].sort
       path_links.map { |linknr|
         # TODO - check the fields
-        [linknr,0,0,ordered_between.first,ordered_between.last]
+        [linknr,'','','',ordered_between.first,ordered_between.last]
       }
-    }
+    }.compact
 
-    OtTable.insert($Ot.mainVariantDirectory / 'link1data1.db', records)
+    uniq_records = records.group_by { |record| record.first }.map_values { |_,recs| recs.first }.values
+    p uniq_records.map(&:first).uniq.length
+    p uniq_records.size
+    uniq_records.each { |record|
+      p record
+    }
+    OtQuery.execute("DELETE FROM 'link1data1'")
+    OtTable.insert($Ot.mainVariantDirectory / 'link1data1.db', uniq_records)
   end
 
   def create_path_builder
@@ -112,14 +139,14 @@ SQL
     user_class.network = [M_Car,T_AM]
 
     traffic.addUserClass(M_Car,user_class)
-    traffic.freeze_properties = true
+    traffic.freezeProperties = true
     traffic
   end
 
   def build_path(path_builder,anode,bnode)
-    links = path_builder.get_path(anode,bnode)
+    links = path_builder.getPath(anode,bnode)
     if links.empty?
-      links = path_builder.get_path(bnode,anode)
+      links = path_builder.getPath(bnode,anode)
     end
 
     raise "No path found" if links.empty?
@@ -129,12 +156,12 @@ SQL
   def get_node_set(link_set)
     link_set.map { |linknr|
       $Ot.network.get_link_nodes(linknr)
-    }.uniq
+    }.flatten.uniq
   end
 
   def find_matching_node(nodes1,nodes2)
     matches = nodes1 & nodes2
-    raise "No match!" if matches.empty?
+    return nil if matches.empty?
     raise "Too many matches!" if matches.size > 1
     matches.first
   end
